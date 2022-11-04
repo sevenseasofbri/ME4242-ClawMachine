@@ -29,12 +29,13 @@ char state = 'L';
 
 int motorSpeed = 0;
 
-// SERVO PULLEY
-#define SERVO_PIN 3
+// DC PULLEY
+#define ENA_L298N 3 // PWM
+#define IN1_L298N 6 // Direction Change for DC motor (TODO: UP/DOWN? HAVE TO CHECK)
+#define IN2_L298N 7 // Direction Change for DC motor (TODO: UP/DOWN? HAVE TO CHECK)
 
-Servo pulley;
-int servoPos = 0;
-int prevPos = 0;
+int pulleySpeed = 0;
+
 //
 //// RFID READER
 //#define SS_PIN 10
@@ -58,9 +59,11 @@ void setup() {
   pinMode(IN3_L298N, OUTPUT);
   pinMode(IN4_L298N, OUTPUT);
   analogWrite(ENB_L298N, 0);
-  // Init servo
-  pulley.attach(SERVO_PIN);
-  pulley.write(servoPos);
+  // Init pulley motor and L298N
+  pinMode(ENA_L298N, OUTPUT);
+  pinMode(IN1_L298N, OUTPUT);
+  pinMode(IN2_L298N, OUTPUT);
+  analogWrite(ENA_L298N, 0);
   // Init RFID
 }
 
@@ -92,24 +95,21 @@ void loop() {
   } else if (yAxis > 550) {
     moveUp();
   } else {
-    stopServo();
+    stopPulley();
   }
-//  servoPos = map(yAxis, 0, 1023, 180, 0);
-//  pulley.write(servoPos); 
-
-  
+  analogWrite(ENA_L298N, pulleySpeed);
 }
 
 void moveLeft() {
   digitalWrite(IN3_L298N, HIGH);
   digitalWrite(IN4_L298N, LOW);
-  motorSpeed = map(xAxis, 470, 0, 0, 255);
+  motorSpeed = map(xAxis, 470, 0, 0, 128);
 }
 
 void moveRight() {
   digitalWrite(IN3_L298N, LOW);
   digitalWrite(IN4_L298N, HIGH);
-  motorSpeed = map(xAxis, 550, 1023, 0, 255);
+  motorSpeed = map(xAxis, 550, 1023, 0, 128);
 }
 
 void stopMotor() {
@@ -119,19 +119,21 @@ void stopMotor() {
 }
 
 void moveDown() {
-  pulley.attach(SERVO_PIN);
-  servoPos = map(yAxis, 470, 0, 0, 180);
-  pulley.write(servoPos);  
+  digitalWrite(IN1_L298N, HIGH);
+  digitalWrite(IN2_L298N, LOW);
+  pulleySpeed = map(yAxis, 470, 0, 0, 128);
 }
 
 void moveUp() {
-  pulley.attach(SERVO_PIN);
-  servoPos = map(yAxis, 550, 1023, 180, 0);
-  pulley.write(servoPos);
+  digitalWrite(IN1_L298N, LOW);
+  digitalWrite(IN2_L298N, HIGH);
+  pulleySpeed = map(yAxis, 550, 1023, 0, 128);
 }
 
-void stopServo() {
-  pulley.detach();
+void stopPulley() {
+  digitalWrite(IN1_L298N, LOW);
+  digitalWrite(IN2_L298N, LOW);
+  pulleySpeed = 0;
 }
 
 boolean isButtonPressed(int button) {
