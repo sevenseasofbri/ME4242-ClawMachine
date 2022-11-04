@@ -67,8 +67,8 @@ void setup() {
 void loop() {
   xAxis = analogRead(X_AXIS_JOYSTICK);
   yAxis = analogRead(Y_AXIS_JOYSTICK);
-  grab = digitalRead(UP_BUTTON);
-  letgo = digitalRead(DOWN_BUTTON);
+  grab = isButtonPressed(UP_BUTTON);
+  letgo = isButtonPressed(DOWN_BUTTON);
 
   // SEND MESSAGE TO FLUIDIC CONTROL BOARD
   if (grab || letgo) {
