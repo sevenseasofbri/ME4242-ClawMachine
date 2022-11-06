@@ -23,14 +23,14 @@ boolean letgo = 0;
 char state = 'L';
 
 // DC MOTOR & L298N PINS
-#define ENB_L298N 5 // PWM
+#define ENB_L298N 3 // PWM
 #define IN3_L298N 2 // Direction Change for DC motor (TODO: LEFT/RIGHT? HAVE TO CHECK)
 #define IN4_L298N 4 // Direction Change for DC motor (TODO: LEFT/RIGHT? HAVE TO CHECK)
 
 int motorSpeed = 0;
 
 // DC PULLEY
-#define ENA_L298N 3 // PWM
+#define ENA_L298N 5 // PWM
 #define IN1_L298N 6 // Direction Change for DC motor (TODO: UP/DOWN? HAVE TO CHECK)
 #define IN2_L298N 7 // Direction Change for DC motor (TODO: UP/DOWN? HAVE TO CHECK)
 
@@ -71,12 +71,13 @@ void loop() {
   xAxis = analogRead(X_AXIS_JOYSTICK);
   yAxis = analogRead(Y_AXIS_JOYSTICK);
   grab = isButtonPressed(UP_BUTTON);
-  letgo = isButtonPressed(DOWN_BUTTON);
+  letgo = isButtonPressed(LEFT_BUTTON);
 
   // SEND MESSAGE TO FLUIDIC CONTROL BOARD
   if (grab || letgo) {
     state = letgo ? 'L' : 'G';
     Serial.write(state);
+    Serial.flush();
   }
 
   // X AXIS USED FOR LEFT-RIGHT CONTROL
@@ -103,13 +104,13 @@ void loop() {
 void moveLeft() {
   digitalWrite(IN3_L298N, HIGH);
   digitalWrite(IN4_L298N, LOW);
-  motorSpeed = map(xAxis, 470, 0, 0, 128);
+  motorSpeed = map(xAxis, 470, 0, 0, 250);
 }
 
 void moveRight() {
   digitalWrite(IN3_L298N, LOW);
   digitalWrite(IN4_L298N, HIGH);
-  motorSpeed = map(xAxis, 550, 1023, 0, 128);
+  motorSpeed = map(xAxis, 550, 1023, 0, 150);
 }
 
 void stopMotor() {
@@ -121,13 +122,13 @@ void stopMotor() {
 void moveDown() {
   digitalWrite(IN1_L298N, HIGH);
   digitalWrite(IN2_L298N, LOW);
-  pulleySpeed = map(yAxis, 470, 0, 0, 128);
+  pulleySpeed = map(yAxis, 470, 0, 0, 75);
 }
 
 void moveUp() {
   digitalWrite(IN1_L298N, LOW);
   digitalWrite(IN2_L298N, HIGH);
-  pulleySpeed = map(yAxis, 550, 1023, 0, 128);
+  pulleySpeed = map(yAxis, 550, 1023, 0, 75);
 }
 
 void stopPulley() {

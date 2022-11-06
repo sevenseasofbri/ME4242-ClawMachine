@@ -63,14 +63,15 @@ void loop() {
   if (Serial.available() > 1) {
     state = Serial.read();
     state = (char)state;
+    Serial.flush();
   }
 
   if (state == 'G') {
     valveOn(VALVE_CTRL_0);
     pumpOn(PUMP_IN);
-    delay(5000);
-    pumpOn(PUMP_IN/2); // let it deflate a bit to prevent major leakage
-    delay(200);
+//    delay(5000);
+//    pumpOn(PUMP_IN/2); // let it deflate a bit to prevent major leakage
+//    delay(200);
   } else {
     valveOff(VALVE_CTRL_0);
     pumpOff();
