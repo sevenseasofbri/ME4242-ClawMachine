@@ -6,7 +6,6 @@
 #include <SPI.h>
 #include <deprecated.h>
 #include <MFRC522.h>
-#include <MFRC522Extended.h>
 #include <require_cpp11.h>
 
 // JOYSTICK MODULE - FROM DOCUMENTATION DFR0008
@@ -41,23 +40,16 @@ int motorSpeed = 0;
 
 int pulleySpeed = 0;
 
-// RFID READER
-#define SS_PIN 10
-#define RST_PIN 9
-
-MFRC522 mfrc522(SS_PIN, RST_PIN);
-
 // Game State Variables
-enum game_state {PLAY, STOP};
-game_state gameState = STOP;
+boolean gameState = 0;
  
 void setup() {
   Serial.begin(115200);
   // Init joystick
   pinMode(UP_BUTTON, INPUT);
   pinMode(DOWN_BUTTON, INPUT);
-  pinMode(LEFT_BUTTON, INPUT);
-  pinMode(RIGHT_BUTTON, INPUT);
+  //pinMode(LEFT_BUTTON, INPUT);
+  //pinMode(RIGHT_BUTTON, INPUT);
   pinMode(JOYSTICK_BUTTON, INPUT);
   pinMode(X_AXIS_JOYSTICK, INPUT);
   pinMode(Y_AXIS_JOYSTICK, INPUT);
@@ -72,67 +64,32 @@ void setup() {
   pinMode(IN1_L298N, OUTPUT);
   pinMode(IN2_L298N, OUTPUT);
   analogWrite(ENA_L298N, 0);
-  // Init RFID
-  mfrc522.PCD_Init();
 }
 
 void loop() {
-  // Look for new cards
-  if ( ! mfrc522.PICC_IsNewCardPresent()) 
-  {
-    return;
-  }
-  // Select one of the cards
-  if ( ! mfrc522.PICC_ReadCardSerial()) 
-  {
-    return;
-  }
-  String content= "";
-  byte letter;
-  for (byte i = 0; i < mfrc522.uid.size; i++) 
-  {
-     // Serial.print(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " ");
-     // Serial.print(mfrc522.uid.uidByte[i], HEX);
-     content.concat(String(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " "));
-     content.concat(String(mfrc522.uid.uidByte[i], HEX));
-  }
-  content.toUpperCase();
-  if (content.substring(1) == "73 C2 63 11") //change here the UID of the card/cards that you want to give access
-  {
-    //Serial.println("Enough credits - Start Game");
-    //Serial.println();
-    gameState = PLAY;
+  if (Serial.available() > 1){
+    gameState = Serial.read();
     runGame();
-    delay(3000);
-  }
- 
- else   {
-    //Serial.println(" Access denied");
-    delay(3000);
+    Serial.flush();
   }
 }
 
 void runGame() {
-  while (gameState == PLAY) {
+  while (gameState) {
       xAxis = analogRead(X_AXIS_JOYSTICK);
       yAxis = analogRead(Y_AXIS_JOYSTICK);
-  //  grab = isButtonPressed(UP_BUTTON);
-  //  letgo = isButtonPressed(LEFT_BUTTON);
       prevButtonState = currButtonState;
       currButtonState = isButtonPressed(UP_BUTTON);
 
   // SEND MESSAGE TO FLUIDIC CONTROL BOARD
-//  if (grab || letgo) {
-//    state = letgo ? 'L' : 'G';
-//    Serial.write(state);
-//    Serial.flush();
-//  }
       if (prevButtonState && !currButtonState) { // Toggle
-        grab = !grab;
         state = grab ? 'G' : 'L';
         Serial.write(state);
+        Serial.flush();
+        grab = !grab;
         if (!grab) {
-          gameState = STOP;
+          gameState = 0;
+          Serial.flush();
           break;
         }
       }
@@ -163,7 +120,7 @@ void runGame() {
 void moveLeft() {
   digitalWrite(IN3_L298N, HIGH);
   digitalWrite(IN4_L298N, LOW);
-  motorSpeed = map(xAxis, 470, 0, 0, 250);
+  motorSpeed = map(xAxis, 470, 0, 0, 255);
 }
 
 void moveRight() {
@@ -178,16 +135,16 @@ void stopMotor() {
   motorSpeed = 0;
 }
 
-void moveDown() {
+void moveUp() {
   digitalWrite(IN1_L298N, HIGH);
   digitalWrite(IN2_L298N, LOW);
-  pulleySpeed = map(yAxis, 470, 0, 0, 75);
+  pulleySpeed = map(yAxis, 470, 0, 0, 255);
 }
 
-void moveUp() {
+void moveDown() {
   digitalWrite(IN1_L298N, LOW);
   digitalWrite(IN2_L298N, HIGH);
-  pulleySpeed = map(yAxis, 550, 1023, 0, 75);
+  pulleySpeed = map(yAxis, 550, 1023, 0, 255);
 }
 
 void stopPulley() {

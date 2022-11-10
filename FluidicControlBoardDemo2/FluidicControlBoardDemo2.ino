@@ -57,7 +57,7 @@ void setup() {
 }
 
 void loop() {
-  readPressure();
+  //readPressure();
   // Serial.println(PRESSURE[0]);
 
   if (Serial.available() > 1) {
